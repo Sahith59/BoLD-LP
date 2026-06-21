@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+
+# build output
+dist
+.vite
+
+# local env (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
+*.local
+
+# agent + AI tooling (not part of the project)
+.claude/
+.agents/
+skills-lock.json
+
+# internal planning docs and source artwork (not for the public repo)
+*.docx
+/BoLD creature main.png
+/BoLD_creature_multiple angles.png
+public/bot/
