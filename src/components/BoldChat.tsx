@@ -1,6 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import {
   AnimatePresence,
   animate,
@@ -24,6 +29,7 @@ type Msg = {
   text: string
   actions?: Action[]
   sources?: Source[]
+  error?: boolean
 }
 
 const QUICK: Action[] = [
@@ -143,6 +149,10 @@ export function BoldChat() {
   >('idle')
   const open = phase === 'open'
   const [vp, setVp] = useState({ w: 0, h: 0 })
+  // Below the sm breakpoint the desktop fly-to-center choreography has no room
+  // (the projected window would overflow the top of a phone), so the chat opens
+  // as a bottom sheet instead.
+  const mobile = vp.w > 0 && vp.w < 640
 
   const [messages, setMessages] = useState<Msg[]>([
     { id: 'greet', role: 'bot', text: GREETING_TEXT, actions: QUICK },
@@ -156,6 +166,13 @@ export function BoldChat() {
   const chatLenisRef = useRef<Lenis | null>(null)
   const forcePinRef = useRef(false)
   const idRef = useRef(1)
+
+  // a11y + request lifecycle
+  const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const launcherRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const lastUserRef = useRef('')
 
   // prog: corner O -> grown center torus.  tilt: 0 upright -> 1 laid flat.
   // drop: 0 at center -> 1 resting flat at the bottom of the screen.
@@ -272,9 +289,19 @@ export function BoldChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
+  // Move focus into the chat when it opens so keyboard + screen-reader users
+  // land on the input, not back at the top of the page.
+  useEffect(() => {
+    if (!open) return
+    const id = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(id)
+  }, [open])
+
   async function openChat() {
     if (phase !== 'idle' || !vp.w) return
-    if (reduce) {
+    // Reduced motion or a phone: skip the ring choreography and open directly
+    // (the panel slides up as a bottom sheet on mobile).
+    if (reduce || mobile) {
       setPhase('open')
       return
     }
@@ -292,13 +319,19 @@ export function BoldChat() {
     setPhase('open')
   }
 
+  // Return keyboard focus to the launcher so the user is never stranded.
+  const returnFocus = () =>
+    requestAnimationFrame(() => launcherRef.current?.focus())
+
   async function closeChat() {
     if (phase !== 'open') return
-    if (reduce) {
+    abortRef.current?.abort()
+    if (reduce || mobile) {
       setPhase('idle')
       drop.set(0)
       tilt.set(0)
       prog.set(0)
+      returnFocus()
       return
     }
     // window unmounts + exit-animates; rise + unflatten as one motion, then fly home
@@ -309,22 +342,43 @@ export function BoldChat() {
     ])
     await animate(prog, 0, { type: 'spring', stiffness: 120, damping: 18 })
     setPhase('idle')
+    returnFocus()
   }
 
   function push(m: Omit<Msg, 'id'>) {
     setMessages((prev) => [...prev, { ...m, id: `m${idRef.current++}` }])
   }
 
+  // A recoverable failure: a plain-spoken bot bubble with a one-tap retry of the
+  // exact prompt that failed. Kept out of the model context (error flag) so a
+  // hiccup never pollutes the thread.
+  function pushError(kind: 'rate' | 'server' | 'network') {
+    const text =
+      kind === 'rate'
+        ? "You're sending messages a little fast. Give it a few seconds, then try again."
+        : kind === 'network'
+          ? "I couldn't reach the server. Check your connection and try again."
+          : 'Something went wrong reaching the model. Mind trying that again?'
+    forcePinRef.current = true
+    push({
+      role: 'bot',
+      text,
+      error: true,
+      actions: [{ label: 'Retry', send: lastUserRef.current }],
+    })
+  }
+
   async function send(text: string) {
     const t = text.trim()
     if (!t || pending) return
+    lastUserRef.current = t
 
-    // Snapshot the conversation (incl. this message) for context before any
-    // state update, so the request carries the full thread.
-    const history = [...messages, { role: 'user' as const, text: t }].map((m) => ({
-      role: m.role,
-      text: m.text,
-    }))
+    // Snapshot the thread for context, excluding error bubbles so a prior
+    // failure never gets sent to the model as conversation.
+    const history = messages
+      .filter((m) => !m.error)
+      .map((m) => ({ role: m.role, text: m.text }))
+    history.push({ role: 'user', text: t })
 
     // The user just acted: always jump the view to their new prompt + the reply.
     forcePinRef.current = true
@@ -333,16 +387,38 @@ export function BoldChat() {
     setPending(true)
     setTyping(true)
 
+    const controller = new AbortController()
+    abortRef.current = controller
+    let botId = ''
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: history }),
+        signal: controller.signal,
       })
-      if (!res.ok || !res.body) throw new Error(`bad_response_${res.status}`)
+
+      // No key (503) or no endpoint (404): this is preview mode, answer from the
+      // built-in canned replies rather than showing an error.
+      if (res.status === 503 || res.status === 404) {
+        setTyping(false)
+        push({ role: 'bot', ...stubReply(t) })
+        return
+      }
+      if (res.status === 429) {
+        setTyping(false)
+        pushError('rate')
+        return
+      }
+      if (!res.ok || !res.body) {
+        setTyping(false)
+        pushError('server')
+        return
+      }
 
       // First token replaces the typing dots with a live, growing bubble.
-      const botId = `m${idRef.current++}`
+      botId = `m${idRef.current++}`
       setTyping(false)
       setMessages((prev) => [...prev, { id: botId, role: 'bot', text: '' }])
 
@@ -378,12 +454,23 @@ export function BoldChat() {
         ),
       )
     } catch {
-      // Proxy unreachable or no API key: fall back to the canned reply.
       setTyping(false)
-      push({ role: 'bot', ...stubReply(t) })
+      if (controller.signal.aborted) {
+        // User stopped (or closed): keep partial text, drop an empty bubble.
+        setMessages((prev) =>
+          prev.filter((m) => !(m.id === botId && !m.text.trim())),
+        )
+        return
+      }
+      pushError('network')
     } finally {
       setPending(false)
+      abortRef.current = null
     }
+  }
+
+  function stop() {
+    abortRef.current?.abort()
   }
 
   function runAction(a: Action) {
@@ -391,6 +478,29 @@ export function BoldChat() {
     if (a.to) {
       navigate(a.to)
       closeChat()
+    }
+  }
+
+  // Keep Tab focus inside the open dialog (a lightweight focus trap).
+  function trapTab(e: ReactKeyboardEvent) {
+    if (e.key !== 'Tab') return
+    const root = panelRef.current
+    if (!root) return
+    const nodes = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    )
+    if (!nodes.length) return
+    const first = nodes[0]!
+    const last = nodes[nodes.length - 1]!
+    const active = document.activeElement
+    if (e.shiftKey && active === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault()
+      first.focus()
     }
   }
 
@@ -463,6 +573,7 @@ export function BoldChat() {
           keeping the full liquid-glass design at every size. */}
       {vp.w > 0 && (
         <motion.div
+          ref={launcherRef}
           onClick={idle ? openChat : undefined}
           role={idle ? 'button' : undefined}
           aria-label={idle ? 'Ask BoLD' : undefined}
@@ -488,6 +599,8 @@ export function BoldChat() {
             width: size,
             height: size,
             transformOrigin: 'center center',
+            // On mobile the ring does not fly; hide it while the sheet is open.
+            opacity: mobile && !idle ? 0 : 1,
             pointerEvents: idle ? 'auto' : 'none',
             cursor: idle ? 'pointer' : 'default',
           }}
@@ -617,8 +730,9 @@ export function BoldChat() {
           />
         )}
 
-        {/* soft torch-style projection: an edgeless cone of light from the lens */}
-        {open && !reduce && (
+        {/* soft torch-style projection: an edgeless cone of light from the lens
+            (desktop only — there is no laid-flat lens in the mobile sheet) */}
+        {open && !reduce && !mobile && (
           <motion.div
             key="beam"
             aria-hidden
@@ -677,23 +791,51 @@ export function BoldChat() {
         {open && (
           <motion.div
             key="panel"
+            ref={panelRef}
             role="dialog"
-            aria-label="BoLD chat"
-            className="glass-panel z-[61] flex h-[min(468px,82vh)] w-[min(560px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl"
-            style={{
-              position: 'fixed',
-              left: '50%',
-              bottom: WINDOW_BOTTOM,
-              x: '-50%',
-              transformOrigin: 'bottom center',
-            }}
-            initial={{ opacity: 0, scale: 0.9, y: reduce ? 0 : 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: reduce ? 0 : 12 }}
+            aria-modal="true"
+            aria-label="BoLD chat assistant"
+            aria-busy={pending}
+            onKeyDown={trapTab}
+            className={
+              mobile
+                ? 'glass-panel z-[61] flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-3xl'
+                : 'glass-panel z-[61] flex h-[min(468px,82vh)] w-[min(560px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl'
+            }
+            style={
+              mobile
+                ? {
+                    position: 'fixed',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    transformOrigin: 'bottom center',
+                  }
+                : {
+                    position: 'fixed',
+                    left: '50%',
+                    bottom: WINDOW_BOTTOM,
+                    x: '-50%',
+                    transformOrigin: 'bottom center',
+                  }
+            }
+            initial={
+              mobile
+                ? { y: '100%' }
+                : { opacity: 0, scale: 0.9, y: reduce ? 0 : 18 }
+            }
+            animate={mobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={
+              mobile
+                ? { y: '100%' }
+                : { opacity: 0, scale: 0.92, y: reduce ? 0 : 12 }
+            }
             transition={
               reduce
                 ? { duration: 0.2 }
-                : { type: 'spring', stiffness: 220, damping: 24 }
+                : mobile
+                  ? { type: 'spring', stiffness: 260, damping: 30 }
+                  : { type: 'spring', stiffness: 220, damping: 24 }
             }
           >
             {/* dark frosted backing so the window reads clearly over the dim scrim */}
@@ -736,7 +878,13 @@ export function BoldChat() {
               data-lenis-prevent
               className="relative min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              <div ref={scrollContentRef} className="space-y-3 px-4 py-4">
+              <div
+                ref={scrollContentRef}
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions text"
+                className="space-y-3 px-4 py-4"
+              >
               {messages.map((m) => (
                 <div
                   key={m.id}
@@ -747,7 +895,9 @@ export function BoldChat() {
                       className={
                         m.role === 'user'
                           ? 'rounded-2xl rounded-br-md bg-[rgba(var(--accent-rgb),0.16)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-white'
-                          : 'glass-soft rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[13.5px] leading-relaxed text-white/85'
+                          : m.error
+                            ? 'rounded-2xl rounded-bl-md border border-rose-400/25 bg-rose-500/10 px-3.5 py-2.5 text-[13.5px] leading-relaxed text-rose-100'
+                            : 'glass-soft rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[13.5px] leading-relaxed text-white/85'
                       }
                     >
                       {m.role === 'user' ? (
@@ -797,7 +947,11 @@ export function BoldChat() {
                 </div>
               ))}
               {typing && (
-                <div className="glass-soft inline-flex items-center gap-1 rounded-2xl rounded-bl-md px-3.5 py-3">
+                <div
+                  role="status"
+                  aria-label="BoLD is typing"
+                  className="glass-soft inline-flex items-center gap-1 rounded-2xl rounded-bl-md px-3.5 py-3"
+                >
                   {[0, 1, 2].map((i) => (
                     <motion.span
                       key={i}
@@ -825,20 +979,34 @@ export function BoldChat() {
               className="relative flex items-center gap-2 border-t border-white/10 p-3"
             >
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={pending ? 'BoLD is replying…' : 'Ask about BoLD...'}
                 disabled={pending}
-                className="min-w-0 flex-1 rounded-full bg-white/5 px-4 py-2.5 text-[13.5px] text-white placeholder:text-white/35 focus:bg-white/[0.07] focus:outline-none disabled:opacity-60"
+                aria-label="Ask BoLD a question"
+                enterKeyHint="send"
+                className="min-w-0 flex-1 rounded-full bg-white/5 px-4 py-2.5 text-[13.5px] text-white placeholder:text-white/35 focus:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-60"
               />
-              <button
-                type="submit"
-                aria-label="Send"
-                disabled={!input.trim() || pending}
-                className="bg-accent flex h-9 w-9 flex-none items-center justify-center rounded-full text-black transition-opacity disabled:opacity-40"
-              >
-                <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
-              </button>
+              {pending ? (
+                <button
+                  type="button"
+                  onClick={stop}
+                  aria-label="Stop generating"
+                  className="bg-accent flex h-9 w-9 flex-none items-center justify-center rounded-full text-black transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                >
+                  <span className="h-3 w-3 rounded-[3px] bg-black/85" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  aria-label="Send"
+                  disabled={!input.trim()}
+                  className="bg-accent flex h-9 w-9 flex-none items-center justify-center rounded-full text-black transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-40"
+                >
+                  <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              )}
             </form>
           </motion.div>
         )}

@@ -24,17 +24,39 @@ export function FinalCTA() {
     return null
   }
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const err = validate(email)
     setError(err)
     if (err) return
     setStatus('loading')
-    // Mock capture — no backend in the design phase.
-    window.setTimeout(() => {
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (res.status === 429) {
+        setStatus('idle')
+        setError('Too many tries. Give it a minute, then resend.')
+        return
+      }
+      if (res.status === 422) {
+        setStatus('idle')
+        setError('That doesn’t look like a valid email.')
+        return
+      }
+      if (!res.ok) {
+        setStatus('idle')
+        setError('Something went wrong on our side. Please try again.')
+        return
+      }
       setStatus('success')
       requestAnimationFrame(() => successRef.current?.focus())
-    }, 850)
+    } catch {
+      setStatus('idle')
+      setError('We couldn’t reach the server. Check your connection and retry.')
+    }
   }
 
   return (
