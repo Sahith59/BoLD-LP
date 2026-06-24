@@ -5,11 +5,14 @@
 // the Vite plugin can inject them before the first request.
 
 import { INCIDENTS } from '../src/content/incidents'
+import { clientIp, rateLimit, rateHeaders } from './_ratelimit'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const DEFAULT_MODEL = 'llama-3.3-70b-versatile'
 const MAX_HISTORY = 12
 const MAX_MSG_CHARS = 4000 // cap each message so one request cannot run up tokens
+const RATE_LIMIT = 20 // messages per IP per window
+const RATE_WINDOW_SEC = 60
 
 // Incident knowledge built from the single source of truth, so the bot's stats
 // always match the /incidents page. Source names only — the URLs stay in code and
@@ -97,6 +100,24 @@ const json = (data: unknown, status: number) =>
 
 export async function handleChat(request: Request): Promise<Response> {
   if (request.method !== 'POST') return json({ error: 'method' }, 405)
+
+  // Throttle per IP before doing any paid work, so one client cannot run up the
+  // Groq bill or starve everyone else.
+  const limit = await rateLimit(`chat:${clientIp(request)}`, {
+    limit: RATE_LIMIT,
+    windowSec: RATE_WINDOW_SEC,
+  })
+  if (!limit.ok) {
+    const retry = Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))
+    return new Response(JSON.stringify({ error: 'rate_limited' }), {
+      status: 429,
+      headers: {
+        'content-type': 'application/json',
+        'retry-after': String(retry),
+        ...rateHeaders(limit),
+      },
+    })
+  }
 
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return json({ error: 'missing_key' }, 503)

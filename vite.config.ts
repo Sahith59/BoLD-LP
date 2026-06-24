@@ -5,6 +5,9 @@ import { fileURLToPath, URL } from 'node:url'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { handleChat } from './api/_chat'
+import { handleSubscribe } from './api/_subscribe'
+
+type ApiHandler = (request: Request) => Promise<Response>
 
 /**
  * Load the local .env into process.env, with the FILE taking precedence over any
@@ -33,53 +36,65 @@ function loadDotenvOverride() {
 }
 
 /**
- * Dev-only: mount the same Groq proxy handler used by the Vercel Edge function
- * at /api/chat, so streaming works at localhost:5173 without `vercel dev`.
+ * Dev-only: mount a web-standard Request/Response handler (the same ones the
+ * Vercel Edge functions use) at a Connect middleware path, so the API works at
+ * localhost:5173 without `vercel dev`. Streams the response body through chunk
+ * by chunk so token streaming behaves exactly like production.
  */
+function mountHandler(
+  server: { middlewares: { use: (path: string, fn: unknown) => void } },
+  path: string,
+  handler: ApiHandler,
+) {
+  server.middlewares.use(path, async (req: any, res: any) => {
+    try {
+      const headers = new Headers()
+      for (const [k, v] of Object.entries(req.headers)) {
+        if (typeof v === 'string') headers.set(k, v)
+        else if (Array.isArray(v)) headers.set(k, v.join(', '))
+      }
+
+      const chunks: Buffer[] = []
+      for await (const c of req) chunks.push(c as Buffer)
+      const body = Buffer.concat(chunks)
+
+      const request = new Request(`http://localhost${req.url}`, {
+        method: req.method,
+        headers,
+        body: req.method === 'POST' && body.length ? body : undefined,
+      })
+
+      const response = await handler(request)
+      res.statusCode = response.status
+      response.headers.forEach((value: string, key: string) =>
+        res.setHeader(key, value),
+      )
+
+      if (response.body) {
+        const reader = response.body.getReader()
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          res.write(Buffer.from(value))
+        }
+      }
+      res.end()
+    } catch (err) {
+      res.statusCode = 500
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify({ error: 'dev_proxy', detail: String(err) }))
+    }
+  })
+}
+
 function devApi(): Plugin {
   return {
     name: 'bold-dev-api',
     apply: 'serve',
     configureServer(server) {
       loadDotenvOverride()
-
-      server.middlewares.use('/api/chat', async (req, res) => {
-        try {
-          const headers = new Headers()
-          for (const [k, v] of Object.entries(req.headers)) {
-            if (typeof v === 'string') headers.set(k, v)
-            else if (Array.isArray(v)) headers.set(k, v.join(', '))
-          }
-
-          const chunks: Buffer[] = []
-          for await (const c of req) chunks.push(c as Buffer)
-          const body = Buffer.concat(chunks)
-
-          const request = new Request(`http://localhost${req.url}`, {
-            method: req.method,
-            headers,
-            body: req.method === 'POST' && body.length ? body : undefined,
-          })
-
-          const response = await handleChat(request)
-          res.statusCode = response.status
-          response.headers.forEach((value, key) => res.setHeader(key, value))
-
-          if (response.body) {
-            const reader = response.body.getReader()
-            for (;;) {
-              const { done, value } = await reader.read()
-              if (done) break
-              res.write(Buffer.from(value))
-            }
-          }
-          res.end()
-        } catch (err) {
-          res.statusCode = 500
-          res.setHeader('content-type', 'application/json')
-          res.end(JSON.stringify({ error: 'dev_proxy', detail: String(err) }))
-        }
-      })
+      mountHandler(server, '/api/chat', handleChat)
+      mountHandler(server, '/api/subscribe', handleSubscribe)
     },
   }
 }

@@ -28,9 +28,21 @@ The chat still works without a key, it falls back to canned answers.
 
 ## Environment
 
-- `GROQ_API_KEY` is server-side only and never reaches the browser. The dev server
-  (`vite.config.ts`) and the Vercel Edge function (`api/chat.ts`) read it; the
-  browser only ever calls `/api/chat`.
+All secrets are server-side only and never reach the browser. The dev server
+(`vite.config.ts`) mounts the same handlers the Vercel Edge functions use, so the
+API behaves identically in dev and production. The browser only ever calls
+`/api/chat` and `/api/subscribe`.
+
+- `GROQ_API_KEY` — the chat assistant. Without it, the chat falls back to canned
+  answers.
+- `EARLY_ACCESS_WEBHOOK_URL` — optional. Where early-access signups are POSTed.
+  If unset, signups are validated and accepted but only logged server-side.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — optional. Enable durable,
+  distributed rate limiting on the API routes. Recommended before a public deploy.
+  Without them, an in-memory limiter is used (correct in dev and per-instance).
+
+Both API routes are rate limited per IP: chat at 20 requests/minute, signups at
+5/minute, returning `429` with `Retry-After`.
 
 ## Build
 
