@@ -1,7 +1,6 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import { Section } from '@/components/ui/section'
-import { GlassPanel } from '@/components/ui/glass-panel'
 import { GlassCard } from '@/components/ui/glass-card'
 import { DriftingLight } from '@/components/ui/drifting-light'
 import { ScannerTimeline } from './ScannerTimeline'
@@ -143,26 +142,10 @@ export function AlarmVsScanner() {
         </div>
       </div>
 
-      {/* The argument made visual: blind gap vs continuous line */}
+      {/* The argument made visual: blind gap vs continuous line, with the
+          defining question folded in as its conclusion */}
       <motion.div variants={rise} className="mt-4">
         <ScannerTimeline />
-      </motion.div>
-
-      {/* The defining question */}
-      <motion.div variants={rise} className="mt-4">
-        <GlassPanel className="flex flex-col gap-5 p-7 md:flex-row md:items-center md:justify-between md:p-8">
-          <div className="font-display text-[19px] font-medium text-white md:text-[22px]">
-            “Did user A just read user B’s data?”
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-            <div className="font-mono text-[12px] text-white/40">
-              <span className="tracking-[0.2em]">SCANNER:</span> no idea
-            </div>
-            <div className="font-mono text-[12px] text-accent">
-              <span className="tracking-[0.2em]">BoLD:</span> that’s the whole job
-            </div>
-          </div>
-        </GlassPanel>
       </motion.div>
 
       <motion.p
