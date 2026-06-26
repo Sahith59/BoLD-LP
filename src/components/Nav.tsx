@@ -15,7 +15,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
 import { AccentLink } from '@/components/ui/accent-button'
-import { APP_URL } from '@/lib/config'
+import { appUrl } from '@/lib/config'
 import { EASE } from '@/lib/motion'
 
 const CHAPTERS = [
@@ -229,7 +229,7 @@ function FullMenu({
                 >
                   GET UPDATES
                 </button>
-                <AccentLink href={APP_URL} onClick={onClose}>
+                <AccentLink href={appUrl('menu')} onClick={onClose}>
                   Try the beta
                 </AccentLink>
               </div>
@@ -330,7 +330,7 @@ export function Nav({
 
           <div className="flex flex-none items-center gap-3">
             <AccentLink
-              href={APP_URL}
+              href={appUrl('nav')}
               className="hidden px-5 py-2.5 text-[13px] md:inline-flex"
             >
               Try the beta

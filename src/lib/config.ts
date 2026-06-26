@@ -7,3 +7,19 @@
 export const APP_URL =
   (import.meta.env.VITE_APP_URL as string | undefined)?.trim() ||
   'https://app.yourdomain.com'
+
+/**
+ * The app entry URL tagged so signups can be attributed to the landing page,
+ * and to which CTA drove the click. `placement` is the spot the button lives
+ * (hero, nav, menu, final_cta), surfaced as utm_content in your analytics.
+ */
+export function appUrl(placement: string): string {
+  const params = new URLSearchParams({
+    ref: 'landing',
+    utm_source: 'landing',
+    utm_medium: 'cta',
+    utm_content: placement,
+  })
+  const sep = APP_URL.includes('?') ? '&' : '?'
+  return `${APP_URL}${sep}${params.toString()}`
+}

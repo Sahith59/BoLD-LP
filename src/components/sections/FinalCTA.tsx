@@ -4,7 +4,7 @@ import { Check, Loader2 } from 'lucide-react'
 import { Section } from '@/components/ui/section'
 import { GlassPanel } from '@/components/ui/glass-panel'
 import { AccentButton, AccentLink } from '@/components/ui/accent-button'
-import { APP_URL } from '@/lib/config'
+import { appUrl } from '@/lib/config'
 import { EASE, rise } from '@/lib/motion'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -82,7 +82,7 @@ export function FinalCTA() {
           variants={rise}
           className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
         >
-          <AccentLink href={APP_URL}>
+          <AccentLink href={appUrl('final_cta')}>
             Try the beta
             <span aria-hidden className="text-[15px]">
               →
