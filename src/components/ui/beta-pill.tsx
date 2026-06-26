@@ -20,10 +20,10 @@ export function BetaPill({ className }: { className?: string }) {
           {!reduce && (
             <motion.span
               aria-hidden
-              className="bg-accent absolute h-1.5 w-1.5 rounded-full"
-              initial={{ scale: 1, opacity: 0.55 }}
-              animate={{ scale: [1, 2.6], opacity: [0.55, 0] }}
-              transition={{ duration: 2.4, ease: 'easeOut', repeat: Infinity }}
+              className="bg-accent absolute inset-0 rounded-full"
+              style={{ filter: 'blur(1.5px)' }}
+              animate={{ opacity: [0.45, 0.95, 0.45], scale: [1, 1.7, 1] }}
+              transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
             />
           )}
           <span
