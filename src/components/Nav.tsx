@@ -14,7 +14,8 @@ import {
 import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { GlassCard } from '@/components/ui/glass-card'
-import { AccentButton } from '@/components/ui/accent-button'
+import { AccentLink } from '@/components/ui/accent-button'
+import { APP_URL } from '@/lib/config'
 import { EASE } from '@/lib/motion'
 
 const CHAPTERS = [
@@ -217,14 +218,21 @@ function FullMenu({
                   </Link>
                 ))}
               </div>
-              <AccentButton
-                onClick={() => {
-                  onClose()
-                  onCta()
-                }}
-              >
-                Get early access
-              </AccentButton>
+              <div className="flex items-center gap-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose()
+                    onCta()
+                  }}
+                  className="font-mono text-[12px] tracking-[0.16em] text-white/55 transition-colors hover:text-white"
+                >
+                  GET UPDATES
+                </button>
+                <AccentLink href={APP_URL} onClick={onClose}>
+                  Try the beta
+                </AccentLink>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -321,12 +329,12 @@ export function Nav({
           </nav>
 
           <div className="flex flex-none items-center gap-3">
-            <AccentButton
-              onClick={onCta}
+            <AccentLink
+              href={APP_URL}
               className="hidden px-5 py-2.5 text-[13px] md:inline-flex"
             >
-              Get early access
-            </AccentButton>
+              Try the beta
+            </AccentLink>
 
             <button
               type="button"

@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Check, Loader2 } from 'lucide-react'
 import { Section } from '@/components/ui/section'
 import { GlassPanel } from '@/components/ui/glass-panel'
-import { AccentButton } from '@/components/ui/accent-button'
+import { AccentButton, AccentLink } from '@/components/ui/accent-button'
+import { APP_URL } from '@/lib/config'
 import { EASE, rise } from '@/lib/motion'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -66,18 +67,33 @@ export function FinalCTA() {
           variants={rise}
           className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.02em] text-white md:text-[48px]"
         >
-          Be first in line.
+          The beta is live.
         </motion.h2>
         <motion.p
           variants={rise}
           className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60 md:text-base"
         >
-          We’re onboarding a first group of funded startups and MSSPs. Leave your
-          email and we’ll run a free check on your live app, test accounts only,
-          and show you exactly what we’d catch, before anyone exploits it.
+          Point BoLD at your own app with test accounts and see exactly what it
+          catches, free. Not ready yet? Leave your email and we’ll tell you the
+          moment general access opens.
         </motion.p>
 
-        <motion.div variants={rise} className="mt-10 max-w-xl">
+        <motion.div
+          variants={rise}
+          className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+        >
+          <AccentLink href={APP_URL}>
+            Try the beta
+            <span aria-hidden className="text-[15px]">
+              →
+            </span>
+          </AccentLink>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-white/35">
+            OR GET LAUNCH UPDATES
+          </span>
+        </motion.div>
+
+        <motion.div variants={rise} className="mt-6 max-w-xl">
           <AnimatePresence mode="wait" initial={false}>
             {status === 'success' ? (
               <motion.div

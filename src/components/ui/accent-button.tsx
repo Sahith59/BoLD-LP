@@ -1,29 +1,22 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-interface AccentButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  contentClassName?: string
-}
+// The one primary CTA surface: amber liquid glass that refracts the live
+// background (the same `#liquid-glass` lens as the 3D wordmark), etched with a
+// raised bevel and a wet gleam that sweeps on hover. overflow-hidden clips every
+// inner layer to the pill so nothing pokes past the rounded corners.
+const BASE =
+  'accent-button group relative isolate inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black'
 
-/** The one primary CTA: amber liquid glass that refracts the live background
- *  (the same `#liquid-glass` lens as the 3D wordmark), etched with a raised
- *  bevel and a wet gleam that sweeps on hover. overflow-hidden clips every inner
- *  layer to the pill so nothing pokes past the rounded corners. */
-export const AccentButton = React.forwardRef<
-  HTMLButtonElement,
-  AccentButtonProps
->(({ className, children, contentClassName, ...props }, ref) => {
+function Surface({
+  children,
+  contentClassName,
+}: {
+  children: React.ReactNode
+  contentClassName?: string
+}) {
   return (
-    <button
-      ref={ref}
-      className={cn(
-        'accent-button group relative isolate inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold tracking-tight text-white outline-none',
-        'focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-        className,
-      )}
-      {...props}
-    >
+    <>
       {/* top specular sheen, matched to the pill shape so corners stay clean */}
       <span
         aria-hidden
@@ -50,7 +43,41 @@ export const AccentButton = React.forwardRef<
       >
         {children}
       </span>
+    </>
+  )
+}
+
+interface AccentButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  contentClassName?: string
+}
+
+export const AccentButton = React.forwardRef<
+  HTMLButtonElement,
+  AccentButtonProps
+>(({ className, children, contentClassName, ...props }, ref) => {
+  return (
+    <button ref={ref} className={cn(BASE, className)} {...props}>
+      <Surface contentClassName={contentClassName}>{children}</Surface>
     </button>
   )
 })
 AccentButton.displayName = 'AccentButton'
+
+interface AccentLinkProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  contentClassName?: string
+}
+
+/** Anchor twin of AccentButton: identical glass surface, for links that hand
+ *  off to another page (the live app). */
+export const AccentLink = React.forwardRef<HTMLAnchorElement, AccentLinkProps>(
+  ({ className, children, contentClassName, ...props }, ref) => {
+    return (
+      <a ref={ref} className={cn(BASE, className)} {...props}>
+        <Surface contentClassName={contentClassName}>{children}</Surface>
+      </a>
+    )
+  },
+)
+AccentLink.displayName = 'AccentLink'
