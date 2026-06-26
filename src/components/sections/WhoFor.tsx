@@ -3,9 +3,10 @@ import { Section } from '@/components/ui/section'
 import { rise } from '@/lib/motion'
 
 const CHIPS = [
-  'Funded startups · 5–20 devs, real users',
-  'MSSPs',
-  'Security & engineering leads',
+  'Solo founders to funded teams',
+  'Apps built fast, with or without AI',
+  'MSSPs & agencies protecting clients',
+  'Anything holding PII, payments, or private data',
 ]
 
 export function WhoFor() {
@@ -21,9 +22,11 @@ export function WhoFor() {
         variants={rise}
         className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/55 md:text-base"
       >
-        Not hobby projects, and not a $9 scanner. BoLD is for the person who owns
-        both the security and the code, and feels it when a breach turns into a
-        liability with a dollar figure.
+        Team of one or team of fifty. Code you wrote by hand or generated in an
+        afternoon. None of it changes the math: the moment your app holds data
+        that belongs to someone else, a single missing ownership check is all
+        that stands between a normal day and a breach with your name on it. BoLD
+        watches for that exact moment, live, so it never becomes your story.
       </motion.p>
 
       <motion.div variants={rise} className="mt-10 flex flex-wrap gap-3">
