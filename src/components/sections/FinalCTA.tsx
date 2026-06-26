@@ -60,7 +60,7 @@ export function FinalCTA() {
   }
 
   return (
-    <Section id="early-access" index="08" eyebrow="THE ASK">
+    <Section id="early-access" index="13" eyebrow="THE ASK">
       <GlassPanel className="px-6 py-14 md:px-16 md:py-20">
         <motion.h2
           variants={rise}

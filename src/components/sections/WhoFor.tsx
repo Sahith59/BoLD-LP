@@ -10,7 +10,7 @@ const CHIPS = [
 
 export function WhoFor() {
   return (
-    <Section index="07" eyebrow="WHO IT’S FOR">
+    <Section index="10" eyebrow="WHO IT’S FOR">
       <motion.h2
         variants={rise}
         className="max-w-2xl font-display text-[26px] font-semibold leading-[1.12] tracking-[-0.01em] text-white md:text-[40px]"

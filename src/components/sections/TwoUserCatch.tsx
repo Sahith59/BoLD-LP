@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  animate,
   motion,
-  useAnimationFrame,
   useMotionValue,
   useTransform,
+  type AnimationPlaybackControls,
   type MotionValue,
 } from 'motion/react'
-import { Lock, User } from 'lucide-react'
+import { Lock, Play, RotateCcw, User } from 'lucide-react'
 
-const CYCLE = 5600 // ms
+const RUN_MS = 4400 // one pass of the request, A -> BoLD -> caught
+const REST = 0.95 // hold here so the CAUGHT state stays lit at the end
 
 function useIsNarrow() {
   const [narrow, setNarrow] = useState(false)
@@ -107,26 +109,66 @@ function Wire({
 /**
  * The signature: a request from User A travels the live request path, where
  * BoLD sits inline. BoLD checks ownership as it happens and catches A reaching
- * User B's record. Narrated so a non-technical visitor understands instantly.
+ * User B's record. The visitor sends the request themselves, watches BoLD fire,
+ * and can replay it. Auto-runs once when scrolled into view so it is never dead.
  */
 export function TwoUserCatch({ reduce }: { reduce: boolean | null }) {
   const vertical = useIsNarrow()
-  const t = useMotionValue(reduce ? 0.95 : 0)
-  const start = useRef<number | null>(null)
+  const t = useMotionValue(reduce ? REST : 0)
   const [phase, setPhase] = useState(reduce ? 3 : 0)
-  const lastPhase = useRef(reduce ? 3 : 0)
+  const [running, setRunning] = useState(false)
+  const [hasRun, setHasRun] = useState(reduce ? true : false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const controls = useRef<AnimationPlaybackControls | null>(null)
 
-  useAnimationFrame((now) => {
-    if (reduce) return
-    if (start.current === null) start.current = now
-    const v = ((now - start.current) % CYCLE) / CYCLE
-    t.set(v)
-    const p = phaseOf(v)
-    if (p !== lastPhase.current) {
-      lastPhase.current = p
-      setPhase(p)
+  // Drive the narration phase off the timeline value.
+  useEffect(() => {
+    const unsub = t.on('change', (v) => {
+      const p = phaseOf(v)
+      setPhase((prev) => (prev === p ? prev : p))
+    })
+    return () => unsub()
+  }, [t])
+
+  const run = useCallback(() => {
+    if (reduce) {
+      t.set(REST)
+      setPhase(3)
+      setHasRun(true)
+      return
     }
-  })
+    controls.current?.stop()
+    t.set(0)
+    setPhase(0)
+    setHasRun(true)
+    setRunning(true)
+    const c = animate(t, REST, { duration: RUN_MS / 1000, ease: 'linear' })
+    controls.current = c
+    c.then(() => setRunning(false)).catch(() => {})
+  }, [reduce, t])
+
+  // First time the catch scrolls into view, play it once on its own.
+  useEffect(() => {
+    if (reduce) return
+    const el = rootRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            run()
+            io.disconnect()
+            break
+          }
+        }
+      },
+      { threshold: 0.55 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [reduce, run])
+
+  useEffect(() => () => controls.current?.stop(), [])
 
   // Packet A -> BoLD (left wire)
   const leftProgress = useTransform(t, [0.14, 0.44], [0, 1], { clamp: true })
@@ -144,15 +186,15 @@ export function TwoUserCatch({ reduce }: { reduce: boolean | null }) {
   const rightProgress = useTransform(t, [0.62, 0.88], [0, 1], { clamp: true })
   const rightVisible = useTransform(t, [0.6, 0.66, 0.86, 0.92], [0, 1, 1, 0])
 
-  // The catch (fires on User B's record)
-  const pulseScale = useTransform(t, [0.84, 1], [0.5, 2.7], { clamp: true })
-  const pulseOpacity = useTransform(t, [0.82, 0.88, 1], [0, 0.85, 0])
-  const bGlow = useTransform(t, [0.84, 0.9, 0.99, 1], [0, 1, 1, 0])
-  const caughtOpacity = useTransform(t, [0.86, 0.92, 0.99, 1], [0, 1, 1, 0])
+  // The catch (fires on User B's record), held lit at REST
+  const pulseScale = useTransform(t, [0.84, 0.95], [0.5, 2.4], { clamp: true })
+  const pulseOpacity = useTransform(t, [0.82, 0.9, 0.95], [0, 0.85, 0.4])
+  const bGlow = useTransform(t, [0.84, 0.9], [0, 1], { clamp: true })
+  const caughtOpacity = useTransform(t, [0.86, 0.92], [0, 1], { clamp: true })
   const caughtY = useTransform(t, [0.86, 0.92], [10, 0], { clamp: true })
 
   return (
-    <div>
+    <div ref={rootRef}>
       <div className="mx-auto w-full max-w-5xl select-none">
         <div className="flex flex-col items-stretch md:flex-row md:items-center">
           {/* User A */}
@@ -288,6 +330,34 @@ export function TwoUserCatch({ reduce }: { reduce: boolean | null }) {
       <p className="mt-3 text-center font-mono text-[11px] tracking-[0.02em] text-white/65 md:text-[12px]">
         {PHASES[phase]}
       </p>
+
+      {/* The interaction: the visitor sends the bad request themselves */}
+      {!reduce && (
+        <div className="mt-7 flex justify-center">
+          <button
+            type="button"
+            onClick={run}
+            disabled={running}
+            aria-label={
+              hasRun ? 'Replay the catch' : 'Send the request as User A'
+            }
+            className="glass-soft group inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-[13px] font-medium text-white/85 outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-60"
+          >
+            <span className="bg-accent/15 text-accent grid h-6 w-6 place-items-center rounded-full transition group-hover:bg-accent/25">
+              {hasRun ? (
+                <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
+              ) : (
+                <Play className="h-3 w-3 translate-x-px" strokeWidth={2.5} />
+              )}
+            </span>
+            {running
+              ? 'Sending the request…'
+              : hasRun
+                ? 'Replay the catch'
+                : 'Send the request as User A'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
