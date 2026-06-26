@@ -21,14 +21,14 @@ import { Footer } from '@/components/Footer'
 import { GlassFilter } from '@/components/GlassFilter'
 import { Analytics } from '@/components/Analytics'
 import { Landing } from '@/components/Landing'
+// Eager: the "Ask BoLD" ring is a persistent widget that must be present from
+// first paint. It is small, so it does not belong in the lazy split.
+import { BoldChat } from '@/components/BoldChat'
 
 // Heavy or secondary surfaces are code-split so they stay out of the initial
 // bundle. The landing shell (nav, hero copy, footer) paints first; the WebGL
 // gradient, the 3D wordmark, the chat, and every non-home route load on demand.
 const GradientBackdrop = lazy(() => import('@/components/GradientBackdrop'))
-const BoldChat = lazy(() =>
-  import('@/components/BoldChat').then((m) => ({ default: m.BoldChat })),
-)
 const IncidentsPage = lazy(() =>
   import('@/components/IncidentsPage').then((m) => ({
     default: m.IncidentsPage,
@@ -180,9 +180,7 @@ function Shell() {
       </Suspense>
 
       <Footer />
-      <Suspense fallback={null}>
-        <BoldChat />
-      </Suspense>
+      <BoldChat />
     </main>
   )
 }
