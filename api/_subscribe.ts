@@ -110,11 +110,23 @@ async function resendAddContact(
 
 // ---- Email bodies (shipped copy: no em dashes) -----------------------------
 
+// Escape user input before it goes into the HTML email, including quotes so it
+// is safe inside an href attribute. The email passes a permissive regex, so it
+// can contain HTML-significant characters.
+const esc = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 function notifyBodies(email: string, ts: string) {
+  const e = esc(email)
   const text = `New early-access signup.\n\nEmail: ${email}\nWhen:  ${ts}\nSource: landing page\n\nReply to this message to reach them directly.`
   const html = `<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.6;color:#0a0a0a">
     <p style="margin:0 0 12px"><strong>New early-access signup.</strong></p>
-    <p style="margin:0 0 4px">Email: <a href="mailto:${email}" style="color:#c77d0a">${email}</a></p>
+    <p style="margin:0 0 4px">Email: <a href="mailto:${e}" style="color:#c77d0a">${e}</a></p>
     <p style="margin:0 0 4px">When: ${ts}</p>
     <p style="margin:0 0 12px">Source: landing page</p>
     <p style="margin:0;color:#555">Reply to this message to reach them directly.</p>
