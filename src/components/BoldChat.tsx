@@ -40,7 +40,7 @@ const QUICK: Action[] = [
 ]
 
 const GREETING_TEXT =
-  "I'm BoLD, the live alarm for access violations in AI-built apps. Ask me anything, or jump somewhere:"
+  "I'm BoLD, runtime assurance for AI-coded apps. I catch live access failures in production, starting with broken authorization and ownership. Ask me anything, or jump somewhere:"
 
 // ── Flight knobs (tune here) ──────────────────────────────────────────────
 const RING = 64 // idle ring box, px
@@ -66,6 +66,10 @@ const INCIDENT_MATCHERS: { id: string; re: RegExp }[] = [
   { id: 'lovable', re: /lovable/ },
   { id: 'tea', re: /\btea\b/ },
   { id: 'moltbook', re: /moltbook/ },
+  { id: 'first-american', re: /first american/ },
+  { id: 'usps', re: /usps|postal service|informed visibility/ },
+  { id: 'peloton', re: /peloton/ },
+  { id: 'github', re: /\bgithub\b|homakov/ },
 ]
 
 /** Verified source links for whichever incidents the reply itself discusses. The

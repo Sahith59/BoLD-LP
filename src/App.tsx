@@ -24,6 +24,8 @@ import { BoldChat } from '@/components/BoldChat'
 import { Landing } from '@/components/Landing'
 import { IncidentsPage } from '@/components/IncidentsPage'
 import { ComparePage } from '@/components/ComparePage'
+import { BlogIndex } from '@/components/BlogIndex'
+import { BlogPost } from '@/components/BlogPost'
 
 function Shell() {
   const reduce = useReducedMotion()
@@ -147,6 +149,8 @@ function Shell() {
         />
         <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="/compare" element={<ComparePage />} />
+        <Route path="/blog" element={<BlogIndex />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
       </Routes>
 
       <Footer />
