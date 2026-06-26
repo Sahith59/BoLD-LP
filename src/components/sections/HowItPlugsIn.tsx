@@ -2,7 +2,6 @@ import { type ReactNode } from 'react'
 import { motion } from 'motion/react'
 import { Eye, Gauge, FileCheck2, Lock } from 'lucide-react'
 import { Section } from '@/components/ui/section'
-import { GlassPanel } from '@/components/ui/glass-panel'
 import { GlassCard } from '@/components/ui/glass-card'
 import { rise } from '@/lib/motion'
 
@@ -70,6 +69,93 @@ function CodeLine({ children }: { children: ReactNode }) {
   return <div className="whitespace-pre">{children}</div>
 }
 
+function CodePanel() {
+  return (
+    <div className="mt-4 overflow-x-auto rounded-xl border border-white/10 bg-black/40 px-4 py-4 font-mono text-[12px] leading-[1.7] md:text-[12.5px]">
+      <CodeLine>
+        <span className="text-white/30">// app/api/orders/[id]/route.ts</span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-accent">import</span>
+        <span className="text-white/80"> {'{ withBold }'} </span>
+        <span className="text-accent">from</span>
+        <span className="text-white/60"> "@bold/next"</span>
+        <span className="text-white/40">;</span>
+      </CodeLine>
+      <CodeLine>{' '}</CodeLine>
+      <CodeLine>
+        <span className="text-accent">export const</span>
+        <span className="text-white/85"> GET </span>
+        <span className="text-white/40">= </span>
+        <span className="text-white/85">withBold</span>
+        <span className="text-white/40">(</span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-white/40">{'  '}async (req, ctx) =&gt; {'{'}</span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-white/35">
+          {'    '}/* your handler, unchanged */
+        </span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-white/40">{'  }'},</span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-white/40">
+          {'  { '}resolveCallerId: (req) =&gt; getUserId(req){' }'},
+        </span>
+      </CodeLine>
+      <CodeLine>
+        <span className="text-white/40">);</span>
+      </CodeLine>
+    </div>
+  )
+}
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Install the package',
+    body: (
+      <>
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-[13px]">
+          <span className="text-white/30">$</span>
+          <span className="text-white/85">npm i @bold/next</span>
+        </div>
+        <p className="mt-3 text-[13.5px] leading-relaxed text-white/55">
+          One package from npm. There is no agent to provision and no
+          infrastructure to stand up.
+        </p>
+      </>
+    ),
+  },
+  {
+    n: '02',
+    title: 'Set up the SDK',
+    body: (
+      <>
+        <CodePanel />
+        <p className="mt-3 text-[13.5px] leading-relaxed text-white/55">
+          Wrap a route, or add the middleware once, and point BoLD at the user
+          id you already resolve. That one line is the whole integration.
+        </p>
+      </>
+    ),
+  },
+  {
+    n: '03',
+    title: 'Redeploy',
+    body: (
+      <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
+        Ship the way you always do. On your next deploy, BoLD starts reading
+        real traffic and raises the alarm the instant one user can reach another
+        user’s data. Nothing else in your stack changes.
+      </p>
+    ),
+  },
+]
+
 export function HowItPlugsIn() {
   return (
     <Section id="install" index="08" eyebrow="HOW IT PLUGS IN">
@@ -77,71 +163,41 @@ export function HowItPlugsIn() {
         variants={rise}
         className="max-w-2xl font-display text-[26px] font-semibold leading-[1.12] tracking-[-0.01em] text-white md:text-[40px]"
       >
-        A few lines in your app. BoLD watches the rest.
+        An npm install, not a migration.
       </motion.h2>
       <motion.p
         variants={rise}
         className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/55 md:text-base"
       >
-        Add the <span className="text-white/80">@bold/next</span> wrapper to an
-        API route, or set one global header with no code change. BoLD sees your
-        real traffic and raises the alarm the instant one user can reach another
-        user’s data.
+        Add the <span className="text-white/80">@bold/next</span> SDK to your app
+        and redeploy. No agent to run, no traffic rerouted, no infrastructure to
+        stand up. Three steps, and BoLD is watching real requests.
       </motion.p>
 
-      {/* The "few lines" proof: the real wrapper API */}
-      <GlassPanel className="mt-10 overflow-hidden p-0">
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
-          <span className="font-mono text-[11px] tracking-[0.18em] text-white/45">
-            app/api/orders/[id]/route.ts
-          </span>
-          <span className="bg-accent/15 text-accent rounded-full px-2.5 py-1 font-mono text-[9px] font-semibold tracking-[0.16em]">
-            DROP-IN
-          </span>
-        </div>
-        <div className="space-y-1 px-5 py-6 font-mono text-[12.5px] leading-[1.7] md:px-7 md:text-[13px]">
-          <CodeLine>
-            <span className="text-accent">import</span>
-            <span className="text-white/80"> {'{ withBold }'} </span>
-            <span className="text-accent">from</span>
-            <span className="text-white/60"> "@bold/next"</span>
-            <span className="text-white/40">;</span>
-          </CodeLine>
-          <CodeLine>{' '}</CodeLine>
-          <CodeLine>
-            <span className="text-accent">export const</span>
-            <span className="text-white/85"> GET </span>
-            <span className="text-white/40">= </span>
-            <span className="text-white/85">withBold</span>
-            <span className="text-white/40">(</span>
-          </CodeLine>
-          <CodeLine>
-            <span className="text-white/40">{'  '}async (req, ctx) =&gt; {'{'}</span>
-          </CodeLine>
-          <CodeLine>
-            <span className="text-white/35">
-              {'    '}/* your handler, unchanged */
-            </span>
-          </CodeLine>
-          <CodeLine>
-            <span className="text-white/40">{'  }'},</span>
-          </CodeLine>
-          <CodeLine>
-            <span className="text-white/40">
-              {'  { '}resolveCallerId: (req) =&gt; getUserId(req){' }'},
-            </span>
-            <span className="text-white/30">
-              {' '}// who’s calling, so own-access is never flagged
-            </span>
-          </CodeLine>
-          <CodeLine>
-            <span className="text-white/40">);</span>
-          </CodeLine>
-        </div>
-      </GlassPanel>
+      {/* The exact integration, step by step */}
+      <ol className="mt-10 space-y-3">
+        {STEPS.map((s, i) => (
+          <li key={s.n} className="flex gap-4 md:gap-6">
+            <div className="flex flex-col items-center">
+              <span className="bg-accent/15 text-accent ring-accent/30 z-10 grid h-10 w-10 flex-none place-items-center rounded-full font-mono text-[13px] font-semibold ring-1">
+                {s.n}
+              </span>
+              {i < STEPS.length - 1 && (
+                <span className="from-accent/30 mt-1 w-px flex-1 bg-gradient-to-b to-white/5" />
+              )}
+            </div>
+            <GlassCard className="mb-1 flex-1 p-6">
+              <h3 className="font-display text-[17px] font-semibold text-white">
+                {s.title}
+              </h3>
+              {s.body}
+            </GlassCard>
+          </li>
+        ))}
+      </ol>
 
       {/* The four guarantees */}
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2">
         {GUARANTEES.map((g) => (
           <GlassCard key={g.label} className="flex gap-4 p-6">
             <span className="bg-accent/12 text-accent grid h-10 w-10 flex-none place-items-center rounded-xl">
