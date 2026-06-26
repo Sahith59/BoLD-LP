@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { motion } from 'motion/react'
 import { AccentLink } from '@/components/ui/accent-button'
+import { BetaPill } from '@/components/ui/beta-pill'
 import { appUrl } from '@/lib/config'
 import { container, rise } from '@/lib/motion'
 
@@ -18,10 +19,7 @@ function HeroCopy({ onCta }: { onCta: () => void }) {
       className="relative z-10 mx-auto flex min-h-[100svh] max-w-5xl flex-col items-center px-6 pb-12 pt-[42vh] text-center"
     >
       <motion.div variants={rise} className="mb-5">
-        <span className="border-accent/30 bg-accent/10 text-accent inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-[0.22em]">
-          <span className="pulse-dot bg-accent inline-block h-1.5 w-1.5 rounded-full" />
-          BETA IS LIVE
-        </span>
+        <BetaPill />
       </motion.div>
 
       <motion.div

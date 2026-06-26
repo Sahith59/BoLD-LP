@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BetaPill } from '@/components/ui/beta-pill'
 import { appUrl } from '@/lib/config'
 
 type FLink = { label: string; to?: string; href?: string }
@@ -52,10 +53,7 @@ export function Footer() {
               The runtime alarm for AI-coded apps. It catches the access bug they
               ship by default, live, with proof.
             </p>
-            <span className="border-accent/30 bg-accent/10 text-accent mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-[10px] font-semibold tracking-[0.18em]">
-              <span className="pulse-dot bg-accent inline-block h-1.5 w-1.5 rounded-full" />
-              BETA IS LIVE
-            </span>
+            <BetaPill className="mt-5" />
           </div>
 
           {/* Link columns */}
