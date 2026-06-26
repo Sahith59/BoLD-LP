@@ -123,20 +123,23 @@ function notifyBodies(email: string, ts: string) {
 }
 
 function confirmBodies() {
-  const text = `You're in.
+  const text = `You're on the list.
 
-Thanks for asking for early access to BoLD. You're on the list, and you'll hear from us the moment there is something real to show, not before.
+Thanks for joining the BoLD list. We'll email you the moment general access opens, and nothing in between that isn't worth your time.
 
-BoLD is the runtime alarm that catches the access bug AI-built apps ship by default: the moment one real user can reach another user's data. When we onboard you, we'll run a free check on your live app, test accounts only, and show you exactly what we would catch.
+The beta is already live, so if you don't want to wait, you can point BoLD at your own app with test accounts, for free, and see exactly what it catches.
+
+BoLD is the runtime alarm that catches the access bug AI-built apps ship by default: the moment one real user can reach another user's data.
 
 One email when it matters. No spam.
 
 The BoLD team`
   const html = `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:520px;margin:0 auto;font-size:15px;line-height:1.65;color:#111">
-    <div style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:2px;color:#c77d0a;margin-bottom:14px">BoLD &middot; EARLY ACCESS</div>
-    <h1 style="font-size:22px;margin:0 0 14px;color:#0a0a0a">You're in.</h1>
-    <p style="margin:0 0 14px">Thanks for asking for early access to BoLD. You're on the list, and you'll hear from us the moment there is something real to show, not before.</p>
-    <p style="margin:0 0 14px">BoLD is the runtime alarm that catches the access bug AI-built apps ship by default: the moment one real user can reach another user's data. When we onboard you, we'll run a free check on your live app, test accounts only, and show you exactly what we would catch.</p>
+    <div style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:2px;color:#c77d0a;margin-bottom:14px">BoLD &middot; ON THE LIST</div>
+    <h1 style="font-size:22px;margin:0 0 14px;color:#0a0a0a">You're on the list.</h1>
+    <p style="margin:0 0 14px">Thanks for joining the BoLD list. We'll email you the moment general access opens, and nothing in between that isn't worth your time.</p>
+    <p style="margin:0 0 14px">The beta is already live, so if you don't want to wait, you can point BoLD at your own app with test accounts, for free, and see exactly what it catches.</p>
+    <p style="margin:0 0 14px">BoLD is the runtime alarm that catches the access bug AI-built apps ship by default: the moment one real user can reach another user's data.</p>
     <p style="margin:0 0 20px;color:#555">One email when it matters. No spam.</p>
     <p style="margin:0;color:#0a0a0a">The BoLD team</p>
   </div>`
@@ -201,7 +204,7 @@ export async function handleSubscribe(request: Request): Promise<Response> {
         key: resendKey,
         from,
         to: email,
-        subject: "You're on the BoLD early-access list",
+        subject: "You're on the BoLD list",
         text: c.text,
         html: c.html,
       }),

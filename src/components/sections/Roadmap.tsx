@@ -5,12 +5,12 @@ import { DriftingLight } from '@/components/ui/drifting-light'
 import { rise } from '@/lib/motion'
 
 // The expansion arc, honest about what ships vs what is planned. Now is the
-// lit, amber phase (what the first onboarding group gets); Next and Later are
+// lit, amber phase (what the live beta covers); Next and Later are
 // muted roadmap. The discipline is the point: only runtime-native problems.
 const PHASES = [
   {
     when: 'NOW',
-    state: 'First onboarding group',
+    state: 'Live in the beta',
     title: 'Authorization & ownership',
     body: 'Catch the wrong user, role, or tenant reaching data or actions that are not theirs. BOLA, function-level authz, cross-tenant access, privilege escalation, excessive data exposure.',
     live: true,

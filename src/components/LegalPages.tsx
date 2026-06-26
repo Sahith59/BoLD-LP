@@ -119,7 +119,7 @@ export function PrivacyPage() {
       <H2>1. Information we collect</H2>
       <P>Information you give us:</P>
       <UL>
-        <li>Your email address, when you join the early-access list.</li>
+        <li>Your email address, when you join our email list for launch updates.</li>
         <li>
           Your name (optional), email address, and message, when you use the
           contact form.
@@ -300,8 +300,8 @@ export function TermsPage() {
       <H2>2. The beta and early access</H2>
       <P>
         Access to the {COMPANY.name} beta is offered at our discretion. We may
-        change, limit, or discontinue it at any time, and joining the
-        early-access list does not guarantee access on any particular timeline,
+        change, limit, or discontinue it at any time, and joining our
+        email list does not guarantee access on any particular timeline,
         or at all. Information on this site about the product is provided for
         general guidance and may change as the product evolves.
       </P>

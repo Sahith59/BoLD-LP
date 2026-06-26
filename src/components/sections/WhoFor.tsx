@@ -44,9 +44,9 @@ export function WhoFor() {
         variants={rise}
         className="mt-8 max-w-2xl text-[14px] leading-relaxed text-white/45"
       >
-        No fake logo walls. No “trusted by 10,000 companies.” We’re pre-launch.
-        We’d rather earn the first ten teams who’d be genuinely upset if we
-        disappeared.
+        No fake logo walls. No “trusted by 10,000 companies.” We’re early, and
+        we’d rather earn the first teams who’d be genuinely upset if we
+        disappeared than chase a number.
       </motion.p>
     </Section>
   )
