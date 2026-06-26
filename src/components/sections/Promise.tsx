@@ -5,7 +5,7 @@ import { rise } from '@/lib/motion'
 
 export function Promise() {
   return (
-    <Section index="06" eyebrow="THE PROMISE">
+    <Section id="promise" index="07" eyebrow="THE PROMISE">
       <GlassPanel className="px-7 py-14 text-center md:px-16 md:py-20">
         <motion.div
           variants={rise}

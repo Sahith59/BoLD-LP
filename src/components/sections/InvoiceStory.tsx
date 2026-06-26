@@ -32,33 +32,6 @@ const STEPS = [
   },
 ]
 
-const FAMILY = [
-  {
-    lead: 'Read someone else’s records.',
-    detail: 'Invoices, files, messages, profiles.',
-  },
-  {
-    lead: 'Edit or delete data you do not own.',
-    detail: 'Not just view it, change it.',
-  },
-  {
-    lead: 'Reach an admin action as a normal user.',
-    detail: 'The endpoint the AI never locked.',
-  },
-  {
-    lead: 'Promote yourself with one field.',
-    detail: 'Send role: admin and the app trusts it.',
-  },
-  {
-    lead: 'Pull back more than you should.',
-    detail: 'Responses leaking fields, other users’ data, internal flags.',
-  },
-  {
-    lead: 'See another tenant’s data.',
-    detail: 'One customer’s account exposing another’s, in multi-tenant apps.',
-  },
-]
-
 export function InvoiceStory({ reduce }: { reduce: boolean | null }) {
   return (
     <Section id="flaw" index="02" eyebrow="THE FLAW">
@@ -114,39 +87,19 @@ export function InvoiceStory({ reduce }: { reduce: boolean | null }) {
         </div>
       </div>
 
-      {/* Widen: the same ownership failure across the whole access family */}
-      <motion.div variants={rise} className="mt-20">
-        <h3 className="text-center font-display text-[24px] font-semibold tracking-[-0.01em] text-white md:text-[30px]">
-          And it is not just invoices.
-        </h3>
-        <p className="mx-auto mt-3 max-w-xl text-center text-[14px] leading-relaxed text-white/50 md:text-[15px]">
-          The same ownership failure shows up across the whole access-violation
-          family.
-        </p>
-
-        <div className="mt-10 grid gap-3 md:grid-cols-2">
-          {FAMILY.map((f) => (
-            <div
-              key={f.lead}
-              className="glass-refract-soft flex items-start gap-3 rounded-2xl px-5 py-4"
-            >
-              <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
-              <p className="text-[14.5px] leading-relaxed text-white md:text-[15px]">
-                {f.lead}{' '}
-                <span className="text-white/50">{f.detail}</span>
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mx-auto mt-12 max-w-2xl text-center font-display text-[17px] leading-relaxed text-white/65 md:text-[19px]">
-          One question underneath all of them:{' '}
-          <span className="text-white">
-            can someone reach data or an action that is not theirs?
-          </span>{' '}
-          BoLD answers it, live, for every request.
-        </p>
-      </motion.div>
+      {/* Widen toward the whole family (the full catalog lives in its own
+          WhatItCatches section), then hand off to the live catch. */}
+      <motion.p
+        variants={rise}
+        className="mx-auto mt-16 max-w-2xl text-center font-display text-[17px] leading-relaxed text-white/65 md:text-[19px]"
+      >
+        And it is not just invoices. The same ownership failure runs through a
+        whole family of access flaws. One question sits underneath all of them:{' '}
+        <span className="text-white">
+          can someone reach data or an action that is not theirs?
+        </span>{' '}
+        BoLD answers it, live, for every request.
+      </motion.p>
 
       {/* The signature: the same moment, live, in the request path */}
       <motion.div variants={rise} className="mt-20">

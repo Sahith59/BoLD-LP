@@ -47,7 +47,7 @@ const ALARM: { lead: string; rest: string; key?: boolean }[] = [
 
 export function AlarmVsScanner() {
   return (
-    <Section index="04" eyebrow="ALARM, NOT SCANNER">
+    <Section id="alarm" index="05" eyebrow="ALARM, NOT SCANNER">
       <motion.h2
         variants={rise}
         className="max-w-2xl font-display text-[26px] font-semibold leading-[1.12] tracking-[-0.01em] text-white md:text-[40px]"
