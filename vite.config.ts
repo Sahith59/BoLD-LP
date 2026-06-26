@@ -6,6 +6,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { handleChat } from './api/_chat'
 import { handleSubscribe } from './api/_subscribe'
+import { handleContact } from './api/_contact'
 
 type ApiHandler = (request: Request) => Promise<Response>
 
@@ -95,6 +96,7 @@ function devApi(): Plugin {
       loadDotenvOverride()
       mountHandler(server, '/api/chat', handleChat)
       mountHandler(server, '/api/subscribe', handleSubscribe)
+      mountHandler(server, '/api/contact', handleContact)
     },
   }
 }

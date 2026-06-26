@@ -23,3 +23,23 @@ export function appUrl(placement: string): string {
   const sep = APP_URL.includes('?') ? '&' : '?'
   return `${APP_URL}${sep}${params.toString()}`
 }
+
+// Company / legal identity, centralized so it is one swap before launch.
+// Published under the BoLD brand only, with no individual's name. Set
+// VITE_CONTACT_EMAIL to your domain inbox after deploy, and VITE_LEGAL_JURISDICTION
+// once you have chosen a governing jurisdiction (e.g. "the State of Delaware, USA").
+// Update `name` with your registered legal entity if and when you incorporate.
+export const COMPANY = {
+  name: 'BoLD',
+  email:
+    (import.meta.env.VITE_CONTACT_EMAIL as string | undefined)?.trim() ||
+    'hello@yourdomain.com',
+  jurisdiction:
+    (import.meta.env.VITE_LEGAL_JURISDICTION as string | undefined)?.trim() ||
+    '',
+  effectiveDate: 'June 2026',
+}
+
+// Only surface the email address once a real one is wired, so the placeholder
+// domain never shows on a live page.
+export const hasRealContactEmail = !COMPANY.email.includes('yourdomain.com')

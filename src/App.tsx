@@ -49,6 +49,9 @@ const PrivacyPage = lazy(() =>
 const TermsPage = lazy(() =>
   import('@/components/LegalPages').then((m) => ({ default: m.TermsPage })),
 )
+const ContactPage = lazy(() =>
+  import('@/components/ContactPage').then((m) => ({ default: m.ContactPage })),
+)
 
 function Shell() {
   const reduce = useReducedMotion()
@@ -176,6 +179,7 @@ function Shell() {
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </Suspense>
 
