@@ -29,11 +29,15 @@ const LEDGER = [
   ['Lovable', '170+ apps exposed, missing row-level security', 'lovable'],
   ['Tea', '72K images including IDs, plus 1.1M private messages', 'tea'],
   ['Moltbook', '1.5M API tokens and 35K emails, a vibe-coded app with RLS off', 'moltbook'],
+  ['First American', '~885M documents exposed, a no-login IDOR', 'first-american'],
+  ['USPS', '~60M users, logged in but never checked who owned the data', 'usps'],
+  ['Peloton', 'Riders’ private profiles exposed through the API', 'peloton'],
+  ['GitHub / Rails', 'Mass assignment gave write access to the Rails repo', 'github'],
 ]
 
 export function Incidents() {
   return (
-    <Section index="03" eyebrow="IT’S ALREADY HAPPENING">
+    <Section index="04" eyebrow="IT’S ALREADY HAPPENING">
       <motion.h2
         variants={rise}
         className="max-w-2xl font-display text-[26px] font-semibold leading-[1.12] tracking-[-0.01em] text-white md:text-[40px]"
@@ -44,9 +48,10 @@ export function Incidents() {
         variants={rise}
         className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/55 md:text-base"
       >
-        Real apps, real users, this year. Every one leaked the same way: the app
-        never checked who owned the data it handed back. That is BOLA, and it is
-        the number one API vulnerability.
+        Real apps, real users, from solo launches to the Fortune 500. Every one
+        leaked the same way: the app never checked who owned the data it handed
+        back. BOLA, IDOR, broken authorization, mass assignment: different names
+        for the one missing check.
       </motion.p>
 
       {/* The two biggest cases */}
