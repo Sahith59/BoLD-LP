@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import {
   motion,
   useReducedMotion,
@@ -16,16 +16,39 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import Lenis from 'lenis'
-import { MeshGradient } from '@paper-design/shaders-react'
 import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
 import { GlassFilter } from '@/components/GlassFilter'
-import { BoldChat } from '@/components/BoldChat'
+import { Analytics } from '@/components/Analytics'
 import { Landing } from '@/components/Landing'
-import { IncidentsPage } from '@/components/IncidentsPage'
-import { ComparePage } from '@/components/ComparePage'
-import { BlogIndex } from '@/components/BlogIndex'
-import { BlogPost } from '@/components/BlogPost'
+
+// Heavy or secondary surfaces are code-split so they stay out of the initial
+// bundle. The landing shell (nav, hero copy, footer) paints first; the WebGL
+// gradient, the 3D wordmark, the chat, and every non-home route load on demand.
+const GradientBackdrop = lazy(() => import('@/components/GradientBackdrop'))
+const BoldChat = lazy(() =>
+  import('@/components/BoldChat').then((m) => ({ default: m.BoldChat })),
+)
+const IncidentsPage = lazy(() =>
+  import('@/components/IncidentsPage').then((m) => ({
+    default: m.IncidentsPage,
+  })),
+)
+const ComparePage = lazy(() =>
+  import('@/components/ComparePage').then((m) => ({ default: m.ComparePage })),
+)
+const BlogIndex = lazy(() =>
+  import('@/components/BlogIndex').then((m) => ({ default: m.BlogIndex })),
+)
+const BlogPost = lazy(() =>
+  import('@/components/BlogPost').then((m) => ({ default: m.BlogPost })),
+)
+const PrivacyPage = lazy(() =>
+  import('@/components/LegalPages').then((m) => ({ default: m.PrivacyPage })),
+)
+const TermsPage = lazy(() =>
+  import('@/components/LegalPages').then((m) => ({ default: m.TermsPage })),
+)
 
 function Shell() {
   const reduce = useReducedMotion()
@@ -51,7 +74,8 @@ function Shell() {
     }
   }, [reduce])
 
-  // Grab the MeshGradient's WebGL canvas so the hero glass can refract it
+  // Grab the MeshGradient's WebGL canvas so the hero glass can refract it. It
+  // mounts lazily, so we poll until it appears.
   useEffect(() => {
     let raf = 0
     const find = () => {
@@ -115,15 +139,13 @@ function Shell() {
   return (
     <main className="relative w-full text-white">
       <GlassFilter />
+      <Analytics />
 
       {/* Fixed atmosphere: flowing monochrome gradient + veil + grain */}
       <div ref={gradWrapRef} className="fixed inset-0 z-0">
-        <MeshGradient
-          className="h-full w-full"
-          colors={['#000000', '#1a1a1a', '#333333', '#ffffff']}
-          speed={0.8}
-          backgroundColor="#000000"
-        />
+        <Suspense fallback={<div className="h-full w-full bg-black" />}>
+          <GradientBackdrop />
+        </Suspense>
       </div>
       <div className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black/10 via-black/35 to-black/55" />
       <div className="grain pointer-events-none fixed inset-0 z-0 opacity-[0.05]" />
@@ -136,25 +158,31 @@ function Shell() {
 
       <Nav onCta={scrollToCta} onHome={goHome} />
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Landing
-              gradientCanvas={gradCanvas}
-              onCta={scrollToCta}
-              reduce={reduce}
-            />
-          }
-        />
-        <Route path="/incidents" element={<IncidentsPage />} />
-        <Route path="/compare" element={<ComparePage />} />
-        <Route path="/blog" element={<BlogIndex />} />
-        <Route path="/blog/:slug" element={<BlogPost />} />
-      </Routes>
+      <Suspense fallback={<div className="min-h-[70vh]" />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Landing
+                gradientCanvas={gradCanvas}
+                onCta={scrollToCta}
+                reduce={reduce}
+              />
+            }
+          />
+          <Route path="/incidents" element={<IncidentsPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+        </Routes>
+      </Suspense>
 
       <Footer />
-      <BoldChat />
+      <Suspense fallback={null}>
+        <BoldChat />
+      </Suspense>
     </main>
   )
 }

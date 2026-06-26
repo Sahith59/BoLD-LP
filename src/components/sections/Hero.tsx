@@ -1,8 +1,12 @@
+import { lazy, Suspense } from 'react'
 import { motion } from 'motion/react'
-import BoldLogo3D from '@/components/BoldLogo3D'
 import { AccentLink } from '@/components/ui/accent-button'
-import { APP_URL } from '@/lib/config'
+import { appUrl } from '@/lib/config'
 import { container, rise } from '@/lib/motion'
+
+// The 3D wordmark pulls in Three.js and R3F, the heaviest part of the page.
+// Lazy-load it so the hero copy paints immediately and the glass fades in after.
+const BoldLogo3D = lazy(() => import('@/components/BoldLogo3D'))
 
 /** The hero hook copy + CTA. */
 function HeroCopy({ onCta }: { onCta: () => void }) {
@@ -59,7 +63,7 @@ function HeroCopy({ onCta }: { onCta: () => void }) {
         variants={rise}
         className="mt-12 flex flex-col items-center gap-4 sm:flex-row"
       >
-        <AccentLink href={APP_URL}>
+        <AccentLink href={appUrl('hero')}>
           Try the beta
           <span aria-hidden className="text-[15px]">
             →
@@ -97,7 +101,9 @@ export function Hero({
     <section className="relative w-full overflow-hidden">
       {/* Live 3D glass wordmark — fills the first viewport */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[100svh]">
-        <BoldLogo3D gradientCanvas={gradientCanvas} />
+        <Suspense fallback={null}>
+          <BoldLogo3D gradientCanvas={gradientCanvas} />
+        </Suspense>
       </div>
 
       {/* Soft readability halo behind the copy. Fades out well before the top
