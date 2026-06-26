@@ -20,8 +20,9 @@ import { ArrowUp, X } from 'lucide-react'
 import Lenis from 'lenis'
 import { INCIDENTS } from '@/content/incidents'
 import { RichText } from '@/components/ui/rich-text'
+import { appUrl } from '@/lib/config'
 
-type Action = { label: string; to?: string; send?: string }
+type Action = { label: string; to?: string; send?: string; href?: string }
 type Source = { label: string; url: string }
 type Msg = {
   id: string
@@ -36,7 +37,7 @@ const QUICK: Action[] = [
   { label: 'What is BOLA?', send: 'What is BOLA?' },
   { label: 'Real incidents', to: '/incidents' },
   { label: 'How is BoLD different?', to: '/compare' },
-  { label: 'Get early access', to: '/#early-access' },
+  { label: 'Try the beta', href: appUrl('chat') },
 ]
 
 const GREETING_TEXT =
@@ -108,8 +109,12 @@ function suggestActions(text: string): Action[] | undefined {
     add({ label: 'See the incidents', to: '/incidents' })
   if (/compare|differ|vibeeval|scanner|competitor|\bvs\b|versus|alternative|pentest|better/.test(t))
     add({ label: 'How BoLD compares', to: '/compare' })
-  if (/access|sign|wait ?list|demo|try|start|join|email|onboard|price|cost|buy|\bfree\b/.test(t))
-    add({ label: 'Get early access', to: '/#early-access' })
+  if (/install|integrat|setup|sdk|plug|deploy|wire/.test(t))
+    add({ label: 'How it plugs in', to: '/#install' })
+  if (/try|start|demo|beta|\bfree\b|use it|sign up|get going/.test(t))
+    add({ label: 'Try the beta', href: appUrl('chat') })
+  if (/access|wait ?list|join|email|update|notify|launch|price|cost|buy/.test(t))
+    add({ label: 'Get launch updates', to: '/#early-access' })
   return picks.length ? picks : undefined
 }
 
@@ -131,15 +136,18 @@ function stubReply(text: string): { text: string; actions?: Action[] } {
       text: 'Most tools scan or probe your app and hand you a report. BoLD does one thing none of them do: it watches real production traffic and judges whether a real user just touched data they don’t own. Here is the honest map.',
       actions: [{ label: 'See the comparison', to: '/compare' }],
     }
-  if (/access|sign|waitlist|demo|try|start|join|email|onboard/.test(t))
+  if (/access|sign|waitlist|demo|try|start|join|email|onboard|beta|install|use/.test(t))
     return {
-      text: 'I can get you on the early-access list. We’re onboarding a first group of funded startups and MSSPs, test accounts only.',
-      actions: [{ label: 'Get early access', to: '/#early-access' }],
+      text: 'The beta is live. You can point BoLD at your own app with test accounts, free, and see exactly what it catches. Not ready yet? Leave your email and we’ll tell you when general access opens.',
+      actions: [
+        { label: 'Try the beta', href: appUrl('chat') },
+        { label: 'Get launch updates', to: '/#early-access' },
+      ],
     }
   if (/^(hi|hey|hello|yo|who|what are you|help)/.test(t))
     return { text: GREETING_TEXT, actions: QUICK }
   return {
-    text: "I’m in preview right now, so full answers arrive once I’m wired to the model. Meanwhile I can explain the flaw, show real incidents, compare BoLD to other tools, or get you early access.",
+    text: "I’m in preview right now, so full answers arrive once I’m wired to the model. Meanwhile I can explain the flaw, show real incidents, compare BoLD to other tools, or get you into the live beta.",
     actions: QUICK,
   }
 }
@@ -479,6 +487,10 @@ export function BoldChat() {
 
   function runAction(a: Action) {
     if (a.send) return send(a.send)
+    if (a.href) {
+      window.location.href = a.href
+      return
+    }
     if (a.to) {
       navigate(a.to)
       closeChat()
